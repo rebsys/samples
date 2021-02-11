@@ -1,0 +1,46 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI2
+
+# Controls when the action will run. 
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  ci:
+    name: "CI/CD"
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Runs a single command using the runners shell
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          chmod 600 ~/.ssh/staging.key
+          cat >>~/.ssh/config <<END
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ secrets.USERNAME }}
+          SSH_KEY: ${{ secrets.KEY }}
+          SSH_HOST: ${{ secrets.HOST }}
+
+
+      # Runs a set of commands using the runners shell
+      - name: Check
+        run: |
+          cat ~/.ssh/config
+
+      - name: Connect
+        run: |
+          ssh staging
